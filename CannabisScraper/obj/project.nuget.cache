@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "dgSpecHash": "FSi7qqM07a5m1owNJK11t7PPoG86UMBqJgyZxY3ANi3uIwegVq7xvCAAbXtK/W6t9mKNu9ahGgDfrZL+N6GEgg==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\mattf\\source\\repos\\CannabisScraper\\CannabisScraper\\CannabisScraper.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\mattf\\.nuget\\packages\\dotnetseleniumextras.waithelpers\\3.11.0\\dotnetseleniumextras.waithelpers.3.11.0.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\selenium.support\\4.28.0\\selenium.support.4.28.0.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\selenium.webdriver\\4.28.0\\selenium.webdriver.4.28.0.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\selenium.webdriver.msedgedriver\\131.0.2903.48\\selenium.webdriver.msedgedriver.131.0.2903.48.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\system.text.encodings.web\\8.0.0\\system.text.encodings.web.8.0.0.nupkg.sha512",
+    "C:\\Users\\mattf\\.nuget\\packages\\system.text.json\\8.0.5\\system.text.json.8.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
