@@ -5,33 +5,23 @@ using SeleniumExtras.WaitHelpers;
 using CannabisScraper.Scrapers;
 using CannabisScraper.Utilities;
 using CannabisScraper.Models;
+using CannabisScraper.Data;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using static System.Net.WebRequestMethods;
 
+string configFilePath = @"C:\work\CannabisScraper\config\VendorConfig.json";
+
+ConfigManager configManager = new ConfigManager(configFilePath);
+List<VendorConfig> vendors = configManager.GetVendors();
 
 EdgeOptions options = new EdgeOptions();
 options = EdgeOptionsHelper.SetEdgeOptions(options);
-string[] urls = new string[1]
-{
-    //"https://www.trulieveoh.com/shop/columbus-westerville-dispensary-menu/"
-    "https://dutchie.com/embedded-menu/trulieve-medical-marijuana-dispensary-westerville/products/flower"
-};
-
 
 IWebDriver driver = new EdgeDriver(options);
 
 List<CannabisData> cannabisData = new List<CannabisData>();
-List<Dispensary> dispensaries = new List<Dispensary>();
-
-Dispensary dispensaryData = new Dispensary
-{
-    Url = "https://dutchie.com/embedded-menu/trulieve-medical-marijuana-dispensary-westerville/products/flower",
-    Location = "Westerville, Ohio",
-    CompanyName = "Trulieve"
-};
-
-dispensaries.Add(dispensaryData);
+IDataStorage storage = new JsonDataStorage();
 
 
 Stopwatch stopwatch = Stopwatch.StartNew();
@@ -42,23 +32,33 @@ WaitAssistant tinyWait = new WaitAssistant(driver, TimeSpan.FromSeconds(.25));
 
 Trulieve trulieve = new Trulieve(driver, longWait, tinyWait);
 
-foreach(var dispensary in dispensaries)
+foreach (var vendor in vendors)
 {
-    trulieve.ExecuteScrape(dispensary.Url, cannabisData, dispensary.CompanyName, dispensary.Location);
+    try
+    {
+        // Create the appropriate scraper using the factory
+        IScraper scraper = ScraperFactory.CreateScraper(vendor.CompanyName, driver, longWait, tinyWait);
+
+        Console.WriteLine($"Starting scrape for {vendor.CompanyName}...");
+        scraper.ExecuteScrape(vendor.Url, cannabisData, vendor.CompanyName, vendor.Location, configFilePath);
+
+        Console.WriteLine($"Scrape completed for {vendor.CompanyName}.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error processing {vendor.CompanyName}: {ex.Message}");
+    }
 }
 
-//foreach (var url in urls)
-//{
-//    trulieve.ExecuteScrape(url, cannabisData);
-
-//}
 
 
 stopwatch.Stop();
 double durationInSeconds = stopwatch.Elapsed.TotalSeconds;
 Console.WriteLine($"Screen scraping completed in {durationInSeconds} seconds. ");
+
 string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-string json = JsonConvert.SerializeObject(cannabisData, Formatting.Indented);
-System.IO.File.WriteAllText($"C:\\work\\cannibusList_"+timestamp+".json", json);
+string filePath = $"C:\\work\\CannabisScraper\\output\\cannabisList_{timestamp}.json";
+storage.Save(cannabisData, filePath);
+
 Console.ReadLine();
 

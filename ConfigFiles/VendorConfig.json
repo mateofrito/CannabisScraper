@@ -1,0 +1,23 @@
+{
+  "vendors": [
+    {
+      "companyName": "Trulieve-Westerville",
+      "location": "Westerville, Ohio",
+      "url": "https://dutchie.com/embedded-menu/trulieve-medical-marijuana-dispensary-westerville/products/flower",
+      "url-categories":{
+        "flower":"flower",
+        "edibles":"edibles"
+      },
+      "xpaths": {
+        "rootPath": "//*[@id=\"main-content\"]/div[2]/div[1]/div",
+        "productName": "/div/a/div[2]/div[1]",
+        "brandName": "/div/a/div[2]/div[2]",
+        "thcPotency": "/div/a/div[2]/div[3]/div[2]/div",
+        "cbdPotency": "/div/a/div[2]/div[3]/div[2]/div[2]",
+        "strain": "/div/a/div[2]/div[3]/div[1]",
+        "price": "/div/div/div/button/b",
+        "grams": "/div/div/div/button"
+      }
+    }
+  ]
+}
