@@ -6,61 +6,88 @@ using CannabisScraper.Utilities;
 
 namespace CannabisScraper.Scrapers
 {
-    public class Trulieve : IScraper
+    public class Trulieve : BaseScraper
     {
-        private readonly IWebDriver driver;
-        private readonly WaitAssistant longWait;
-        private readonly WaitAssistant tinyWait;
+        private readonly ConfigManager configManager;
 
-        public Trulieve(IWebDriver driver, WaitAssistant longWait, WaitAssistant tinyWait)
+        public Trulieve(IWebDriver driver, WaitAssistant longWait, WaitAssistant tinyWait, string configFilePath)
+            : base(driver, longWait, tinyWait)
         {
-            this.driver = driver;
-            this.longWait = longWait;
-            this.tinyWait = tinyWait;
+            configManager = new ConfigManager(configFilePath);
         }
 
-        public List<CannabisData> ExecuteScrape(string url, List<CannabisData> cannabisData, string companyName, string location, string configFilePathAndName)
+        public override List<CannabisData> ExecuteScrape(string url, List<CannabisData> cannabisData, string companyName, string location, string configFilePathAndName)
         {
-            driver.Navigate().GoToUrl(url);
+            string categoryXPath = "//*[@id=\"main-content\"]/div[1]/header/div/div[1]/div/h1";
+            string nextButtonXPath = "//*[@id=\"main-content\"]/div[2]/div[2]/nav/button[2]";
+            string firstRowXpath = "//*[@id=\"main-content\"]/div[2]/div[1]/div[1]";
+            int pageCount = 1;
 
-            string categoryXpath = "//*[@id=\"main-content\"]/div[1]/header/div/div[1]/div/h1";
-            if (!longWait.IsElementPresentByXpath(categoryXpath))
+            // Navigate to the initial URL
+            Driver.Navigate().GoToUrl(url);
+
+            if (!LongWait.IsElementPresentByXpath(categoryXPath))
             {
                 Console.WriteLine("Could not load page.");
                 return cannabisData;
             }
 
-            IWebElement categoryElement = driver.FindElement(By.XPath(categoryXpath));
+            // Scrape by category
+            IWebElement categoryElement = Driver.FindElement(By.XPath(categoryXPath));
             string categoryName = categoryElement.Text;
-            Console.WriteLine($"Beginning scrape for the {categoryName} menu.");
+            Console.WriteLine($"Beginning scrape for {companyName} - {categoryName} menu.");
 
+            while (true)
+            {
+                Console.WriteLine($"Scraping page {pageCount} of {categoryName}...");
+                ScrapeCurrentPage(cannabisData, categoryName, configFilePathAndName, companyName, location);
+
+                if (!IsNextButtonEnabled(nextButtonXPath))
+                {
+                    Console.WriteLine("All pages have been scraped.");
+                    break;
+                }
+
+                GoToNextPage(nextButtonXPath);
+                pageCount++;
+
+                Console.WriteLine($"Page {pageCount - 1} scraped, moving on to {pageCount}");
+                Thread.Sleep(500);
+                LongWait.WaitForElementToBeVisible(By.XPath(firstRowXpath));
+            }
+
+            return cannabisData;
+        }
+
+        private void ScrapeCurrentPage(List<CannabisData> cannabisData, string categoryName, string configFilePathAndName, string companyName, string location)
+        {
             string allRowsXPath = "//*[@id=\"main-content\"]/div[2]/div[1]/div";
-            var rowElements = driver.FindElements(By.XPath(allRowsXPath));
-            int maxRowCount = rowElements.Count;
-            Console.WriteLine($"Found {maxRowCount} rows on the {categoryName} page.");
-
-            // Loop through each row
-            for (int rowNumber = 1; rowNumber <= maxRowCount; rowNumber++)
+            var rowElements = Driver.FindElements(By.XPath(allRowsXPath));
+            int maxRowCount = rowElements.Count();
+           
+            for(int rowNumber = 1; rowNumber <= maxRowCount; rowNumber++)
             {
                 try
                 {
-                    // Create CannabisMenuPaths with dynamic XPaths for the current row
-                    var paths = new CannabisMenuPaths(rowNumber, new ConfigManager(configFilePathAndName).GetVendor(companyName).XPaths);
+                    CannabisMenuPaths xpaths = new CannabisMenuPaths(rowNumber, new ConfigManager(configFilePathAndName).GetVendor(companyName).XPaths);
 
-                    // Scrape data for this row
-                    string productName = driver.FindElement(By.XPath(paths.ProductNameXPath)).Text;
-                    string brandName = driver.FindElement(By.XPath(paths.BrandNameXPath)).Text;
-                    string strain = driver.FindElement(By.XPath(paths.StrainXPath)).Text;
-                    string thcPotency = driver.FindElement(By.XPath(paths.THCPotencyXPath)).Text;
+                    IWebElement rowElement = Driver.FindElement(By.XPath(allRowsXPath));
 
-                    string cbdPotency = tinyWait.IsElementPresentByXpath(paths.CBDPotencyXPath)
-                        ? driver.FindElement(By.XPath(paths.CBDPotencyXPath)).Text
+                    LongWait.WaitForElementToBeVisible(By.XPath(xpaths.ProductNameXPath));
+                    // Extract data for each row using the XPaths
+                    string productName = rowElement.FindElement(By.XPath(xpaths.ProductNameXPath)).Text;
+                    string brandName = rowElement.FindElement(By.XPath(xpaths.BrandNameXPath)).Text;
+                    string strain = rowElement.FindElement(By.XPath(xpaths.StrainXPath)).Text;
+                    string thcPotency = rowElement.FindElement(By.XPath(xpaths.THCPotencyXPath)).Text;
+
+                    string cbdPotency = TinyWait.IsElementPresentByXpath(xpaths.CBDPotencyXPath)
+                        ? rowElement.FindElement(By.XPath(xpaths.CBDPotencyXPath)).Text
                         : "N/A";
 
-                    string grams = driver.FindElement(By.XPath(paths.GramsXPath)).Text;
-                    string price = driver.FindElement(By.XPath(paths.PriceXPath)).Text;
+                    string grams = rowElement.FindElement(By.XPath(xpaths.GramsXPath)).Text;
+                    string price = rowElement.FindElement(By.XPath(xpaths.PriceXPath)).Text;
 
-                    // Add data to the list
+                    // Add the scraped data to the list
                     cannabisData.Add(new CannabisData
                     {
                         ProductName = productName,
@@ -77,11 +104,12 @@ namespace CannabisScraper.Scrapers
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing row {rowNumber}: {ex.Message}");
+                    Console.WriteLine($"Error scraping row {rowNumber}: {ex.Message}");
                 }
-            }
 
-            return cannabisData;
+               
+            }
         }
     }
+    
 }

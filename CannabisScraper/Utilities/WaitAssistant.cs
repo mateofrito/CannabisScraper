@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Edge;
@@ -58,6 +59,12 @@ namespace CannabisScraper.Utilities
         {
             By by = By.XPath(xpath);
             return _wait.Until(ExpectedConditions.ElementToBeClickable(by));
+        }
+
+        public void WaitForElementToBeVisible(By by)
+        {
+            
+            _wait.Until(ExpectedConditions.ElementIsVisible(by));
         }
     }
 }

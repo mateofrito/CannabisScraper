@@ -30,19 +30,20 @@ WaitAssistant tinyWait = new WaitAssistant(driver, TimeSpan.FromSeconds(.25));
 
 
 
-Trulieve trulieve = new Trulieve(driver, longWait, tinyWait);
-
 foreach (var vendor in vendors)
 {
     try
     {
-        // Create the appropriate scraper using the factory
-        IScraper scraper = ScraperFactory.CreateScraper(vendor.CompanyName, driver, longWait, tinyWait);
+        
+        IScraper scraper = ScraperFactory.CreateScraper(vendor.CompanyName, driver, longWait, tinyWait, configFilePath);
 
         Console.WriteLine($"Starting scrape for {vendor.CompanyName}...");
         scraper.ExecuteScrape(vendor.Url, cannabisData, vendor.CompanyName, vendor.Location, configFilePath);
 
         Console.WriteLine($"Scrape completed for {vendor.CompanyName}.");
+        string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+        string filePath = $"C:\\work\\CannabisScraper\\output\\cannabisList_{vendor.CompanyName}_{timestamp}.json";
+        storage.Save(cannabisData, filePath);
     }
     catch (Exception ex)
     {
@@ -56,9 +57,9 @@ stopwatch.Stop();
 double durationInSeconds = stopwatch.Elapsed.TotalSeconds;
 Console.WriteLine($"Screen scraping completed in {durationInSeconds} seconds. ");
 
-string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-string filePath = $"C:\\work\\CannabisScraper\\output\\cannabisList_{timestamp}.json";
-storage.Save(cannabisData, filePath);
+//string timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+//string filePath = $"C:\\work\\CannabisScraper\\output\\cannabisList_{timestamp}.json";
+//storage.Save(cannabisData, filePath);
 
 Console.ReadLine();
 

@@ -10,11 +10,11 @@ namespace CannabisScraper.Utilities
 {
     public static class ScraperFactory
     {
-        public static IScraper CreateScraper(string companyName, IWebDriver driver, WaitAssistant longWait, WaitAssistant tinyWait)
+        public static IScraper CreateScraper(string companyName, IWebDriver driver, WaitAssistant longWait, WaitAssistant tinyWait, string configFilePath)
         {
             return companyName switch
             {
-                "Trulieve-Westerville" => new Trulieve(driver, longWait, tinyWait),
+                "Trulieve-Westerville" => new Trulieve(driver, longWait, tinyWait, configFilePath),
                 // Add more vendors here as you create new scrapers
                 _ => throw new ArgumentException($"No scraper available for company: {companyName}")
             };
